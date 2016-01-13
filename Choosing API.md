@@ -16,7 +16,9 @@ In order to register for our FIX API there is minimum account size requirement o
 >**Requires a minimum account size of USD $25,000
 
 
-You can find more information through the following two links:
+You can find more information through the following three links:]
+
+[Overview of Different APIs](https://www.fxcm.com/uk/services/forex-programming/api-programming-interfaces/)
 
 [FXCM API Trading](https://www.fxcm.com/services/api-trading/)
 

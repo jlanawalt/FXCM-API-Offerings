@@ -18,8 +18,6 @@ In order to register for our FIX API there is minimum account size requirement o
 
 You can find more information through the following three links:
 
-[Overview of Different APIs](https://www.fxcm.com/uk/services/api-trading/)
-
 [FXCM API Trading](https://www.fxcm.com/services/api-trading/)
 
 [Choosing Proper SDK](http://fxcodebase.com/wiki/index.php/Choosing_Proper_SDK)

@@ -52,12 +52,12 @@ We also provide FIX like Java API for free and without account balance requireme
 
 [Example Projects](http://apiwiki.fxcorporate.com/doku.php?id=example_projects)
 ___
-Find the FIX API pdf [**Here**](https://files.fxcorporate.com/api/fix/docs/FXCM-FIX-BSI.pdf)
+Find the FIX API pdf [**Here**](https://apiwiki.fxcorporate.com/api/fix/docs/FXCM-FIX-BSI.pdf)
 
-Find the Unique Tags for FIX [**Here**](https://files.fxcorporate.com/api/fix/docs/FIXFXCM10.xml)
+Find the Unique Tags for FIX [**Here**](https://apiwiki.fxcorporate.com/api/fix/docs/FIXFXCM10.xml)
 
 For FIX credentials please contact your representative
 
-For FIX user support please contact the support team at api@fxcm.com
+For FIX user support please contact the support team at api@fxcm.comf
 
 Original Website [**Here**](http://apiwiki.fxcorporate.com/doku.php?id=fix_api)

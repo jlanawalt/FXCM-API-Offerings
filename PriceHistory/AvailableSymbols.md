@@ -1,7 +1,7 @@
 #Symbols and timeframes available from FXCM
 
 Below we have listed a small portion of most popular symbols and timeframes available for resolutions: 1minute, 1hour and 1day
-For a complete listing of available symbols and resolutions please see [catalog.xml](https://pricehistory.fxcorporate.com/pricearchive/catalog.xml).
+For a complete listing of available data please contact your FXCM representantive.
 
 |Symbol|m1 From|m1 To|H1 From|H1 To|D1 From|D1 To
 |:---:|---|---|---|---|---|---

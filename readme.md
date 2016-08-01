@@ -29,3 +29,23 @@ You can find more information through the following links:
 [Download JavaAPI SDK](https://apiwiki.fxcorporate.com/api/java/trading_sdk.zip)
 
 [Download FIX Specification and Dictionary](https://www.fxcm.com/forms/eula/)
+
+API IDEs 
+there are many IDEs available for each OS and programing language, here is short list of popular IDE for each OS.
+Forex Connect API 
+	Windows 32bit and 64bit – Visual Studio 2005 and up
+             https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx
+	Linux 32bit and 64bit – Eclipse     https://eclipse.org/
+	iOS – Xcode   https://developer.apple.com/xcode/ide/
+	Android - Android Studio    https://developer.android.com/studio/intro/index.html
+	All libraries and Jar files included with the API install program
+
+Java Trading API
+	Windows, Linux, Mac  - Netbeans   https://netbeans.org/
+	API Jar files - fxcm-api.jar, fxmsg.jar
+
+FIX protocol
+	C++ - Windows, Linux, Mac - QuickFix - http://www.quickfixengine.org/
+	C# - Windows – QuickFix/N - http://quickfixn.org/
+	Java – any OS with Java VM – QuickFix/J - http://www.quickfixj.org/
+	Each install package includes all libraries, DLLs, and Jar files

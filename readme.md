@@ -1,4 +1,4 @@
-#About the API Offerings
+﻿#About the API Offerings
 
 FXCM currently offers 3 trading APIs for free:  Java API, FIX API and ForexConnect with each of them connecting directly to FXCM’s trading server.
  
@@ -30,9 +30,10 @@ You can find more information through the following links:
 
 [Download FIX Specification and Dictionary](https://www.fxcm.com/forms/eula/)
 
-API IDEs 
+API IDEs
 there are many IDEs available for each OS and programing language, here is short list of popular IDE for each OS.
-Forex Connect API 
+
+Forex Connect API
 	Windows 32bit and 64bit – Visual Studio 2005 and up
              https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx
 	Linux 32bit and 64bit – Eclipse     https://eclipse.org/

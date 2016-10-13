@@ -83,9 +83,10 @@ it only works embedded in a host client, called the embedding program or simply 
 This host program can invoke functions to execute a piece of Lua code, can write and read Lua variables, and can register C functions to be called by Lua code. 
 Through the use of C functions, Lua can be augmented to cope with a wide range of different domains, thus creating customized programming languages sharing a syntactical framework. 
 The Lua distribution includes a sample host program called lua, which uses the Lua library to offer a complete, stand-alone Lua interpreter.
+
 Lua allows programmers to implement namespaces, classes and other related features using its single table implementations. 
 It also allows users to read and write files or parse JSON messages fetched from the web (HTTP requests). 
 Lua can even read DLL files (Microsoft), so code can be more encrypted and safe.
-The IDE we use for LUA at FXCM is Indicore SDK
-(http://fxcodebase.com/wiki/index.php/What_Is_Indicore_SDK)
+
+The IDE we use for LUA at FXCM is [**Indicore SDK**] (http://fxcodebase.com/wiki/index.php/What_Is_Indicore_SDK/)
 This SDK is used to create/debug/test and compile indicators or strategies to be used in Trading Station’s Marketscope charting package.

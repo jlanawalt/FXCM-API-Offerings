@@ -20,7 +20,9 @@ In order to register for our FIX API there is minimum account size requirement o
 
 You can find more information through the following links:
 
-[**FXCM API Trading**](https://www.fxcm.com/services/api-trading/)
+[**FXCM API Introduction**](https://www.fxcm.com/services/api-trading/)
+
+[**FXCM API WIKI**](https://apiwiki.fxcorporate.com/doku.php?id=fix_api/)
 
 [**Choosing Proper SDK**](http://fxcodebase.com/wiki/index.php/Choosing_Proper_SDK)
 

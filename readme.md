@@ -93,7 +93,10 @@ This SDK is used to create/debug/test and compile indicators or strategies to be
 
 ##MT4 databases do not support the following functionality: 
 [Contingency (OCO, ELS, OTO, OTOCO)]
+
 [NetQTY orders]
+
 [Pegged orders]
+
 [Trailing orders (ST, STE, LT, LTE)]
 

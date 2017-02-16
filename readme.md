@@ -92,11 +92,13 @@ The IDE we use for LUA at FXCM is [**Indicore SDK**] (http://fxcodebase.com/wiki
 This SDK is used to create/debug/test and compile indicators or strategies to be used in Trading Station’s Marketscope charting package.
 
 ##MT4 databases do not support the following functionality: 
-[Contingency (OCO, ELS, OTO, OTOCO)]
 
-[NetQTY orders]
+•	Contingency (OCO, ELS, OTO, OTOCO)
 
-[Pegged orders]
+•	NetQTY orders
 
-[Trailing orders (ST, STE, LT, LTE)]
+•	Pegged orders
+
+•	Trailing orders (ST, STE, LT, LTE)
+
 

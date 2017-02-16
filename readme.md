@@ -90,3 +90,10 @@ Lua can even read DLL files (Microsoft), so code can be more encrypted and safe.
 
 The IDE we use for LUA at FXCM is [**Indicore SDK**] (http://fxcodebase.com/wiki/index.php/What_Is_Indicore_SDK/)
 This SDK is used to create/debug/test and compile indicators or strategies to be used in Trading Station’s Marketscope charting package.
+
+##MT4 databases do not support the following functionality: 
+•	Contingency (OCO, ELS, OTO, OTOCO)
+•	NetQTY orders
+•	Pegged orders
+•	Trailing orders (ST, STE, LT, LTE)
+

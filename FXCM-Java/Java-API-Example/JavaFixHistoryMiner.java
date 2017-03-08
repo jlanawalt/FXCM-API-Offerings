@@ -44,6 +44,7 @@ public class JavaFixHistoryMiner
 
   private FXCMLoginProperties login;
   private IGateway gateway;
+  private final Object requestSync = new Object();
   private String currentRequest;
   private boolean requestComplete;
 
@@ -132,12 +133,16 @@ public class JavaFixHistoryMiner
         // attempt to re-login to the api
         gateway.relogin();
       }
-      // set the state of the request to be incomplete
-      requestComplete = false;
-      // request the current trading session status
-      currentRequest = gateway.requestTradingSessionStatus();
-      // wait until the request is complete
-      while(!requestComplete) {}
+      synchronized ( requestSync ) {
+        // set the state of the request to be incomplete
+        requestComplete = false;
+        // request the current trading session status
+        currentRequest = gateway.requestTradingSessionStatus();
+        // wait until the request is complete
+        while(!requestComplete) {
+          requestSync.wait();
+        }
+      }
       // return that this process was successful
       return true;
     }
@@ -177,12 +182,20 @@ public class JavaFixHistoryMiner
   {
     // if the gateway is null then attempt to login
     if(gateway == null) this.login();
-    // set the state of the request to be incomplete
-    requestComplete = false;
-    // request the refresh of all collateral reports
-    currentRequest = gateway.requestAccounts();
-    // wait until all the reqports have been processed
-    while(!requestComplete) {}
+    try {
+      synchronized ( requestSync ) {
+        // set the state of the request to be incomplete
+        requestComplete = false;
+        // request the refresh of all collateral reports
+        currentRequest = gateway.requestAccounts();
+        // wait until all the reqports have been processed
+        while(!requestComplete) {
+            requestSync.wait();
+        }
+      }
+    } catch (InterruptedException ex) {
+      ex.printStackTrace();
+    }
   }
 
   /**
@@ -194,13 +207,16 @@ public class JavaFixHistoryMiner
   {
     try
     {
-      // set the completion status of the requst to false
-      requestComplete = false;
-      // send the request message to the api
-      currentRequest = gateway.sendMessage(request);
-      // wait until the api answers on this particular request
-      // while(!requestComplete) {}
-      // if there is a value to return, it will be passed by currentResult
+      synchronized ( requestSync ) {
+        // set the completion status of the requst to false
+        requestComplete = false;
+        // send the request message to the api
+        currentRequest = gateway.sendMessage(request);
+        // The example code wasn't waiting here, this was commented out
+        // wait until the api answers on this particular request
+        // while(!requestComplete) {}
+        // if there is a value to return, it will be passed by currentResult
+      }
       return currentRequest;
     }
     catch(Exception e) { e.printStackTrace(); }
@@ -262,14 +278,17 @@ public class JavaFixHistoryMiner
    */
   public void messageArrived(CollateralReport cr)
   {
-    // if this report is the result of a direct request by a waiting process
-    if(currentRequest.equals(cr.getRequestID()) && !accounts.contains(cr))
-    {
-      // add the trading account to the account list
-      accounts.add(cr);
-      // set the state of the request to be completed only if this is the last collateral report
-      // requested
-      requestComplete = cr.isLastRptRequested();
+    synchronized ( requestSync ) {
+      // if this report is the result of a direct request by a waiting process
+      if(currentRequest.equals(cr.getRequestID()) && !accounts.contains(cr))
+      {
+        // add the trading account to the account list
+        accounts.add(cr);
+        // set the state of the request to be completed only if this is the last collateral report
+        // requested
+        requestComplete = cr.isLastRptRequested();
+        requestSync.notify();
+      }
     }
   }
 
@@ -282,41 +301,44 @@ public class JavaFixHistoryMiner
    */
   public void messageArrived(TradingSessionStatus tss)
   {
-    // check to see if there is a request from main application for a session update
-    if(currentRequest.equals(tss.getRequestID()))
-    {
-      // set that the request is complete for any waiting thread
-      requestComplete = true;
-      // attempt to set up the historical market data request
-      try
+    synchronized ( requestSync ) {
+      // check to see if there is a request from main application for a session update
+      if(currentRequest.equals(tss.getRequestID()))
       {
-        // create a new market data request
-        MarketDataRequest mdr = new MarketDataRequest();
-        // set the subscription type to ask for only a snapshot of the history
-        mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
-        // request the response to be formated FXCM style
-        mdr.setResponseFormat(IFixDefs.MSGTYPE_FXCMRESPONSE);
-        // set the intervale of the data candles
-        mdr.setFXCMTimingInterval(FXCMTimingIntervalFactory.MIN15);
-        // set the type set for the data candles
-        mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-        // configure the start and end dates
-        Date now = new Date();
-        Calendar calendar = (Calendar)Calendar.getInstance().clone();
-        calendar.setTime(now);
-        calendar.add(Calendar.DAY_OF_MONTH, -1);
-        Date beforeNow = calendar.getTime();
-        // set the dates and times for the market data request
-        mdr.setFXCMStartDate(new UTCDate(beforeNow));
-        mdr.setFXCMStartTime(new UTCTimeOnly(beforeNow));
-        mdr.setFXCMEndDate(new UTCDate(now));
-        mdr.setFXCMEndTime(new UTCTimeOnly(now));
-        // set the instrument on which the we want the historical data
-        mdr.addRelatedSymbol(tss.getSecurity(TEST_CURRENCY));
-        // send the request
-        sendRequest(mdr);
+        // set that the request is complete for any waiting thread
+        requestComplete = true;
+        requestSync.notify();
+        // attempt to set up the historical market data request
+        try
+        {
+          // create a new market data request
+          MarketDataRequest mdr = new MarketDataRequest();
+          // set the subscription type to ask for only a snapshot of the history
+          mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
+          // request the response to be formated FXCM style
+          mdr.setResponseFormat(IFixDefs.MSGTYPE_FXCMRESPONSE);
+          // set the intervale of the data candles
+          mdr.setFXCMTimingInterval(FXCMTimingIntervalFactory.MIN15);
+          // set the type set for the data candles
+          mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+          // configure the start and end dates
+          Date now = new Date();
+          Calendar calendar = (Calendar)Calendar.getInstance().clone();
+          calendar.setTime(now);
+          calendar.add(Calendar.DAY_OF_MONTH, -1);
+          Date beforeNow = calendar.getTime();
+          // set the dates and times for the market data request
+          mdr.setFXCMStartDate(new UTCDate(beforeNow));
+          mdr.setFXCMStartTime(new UTCTimeOnly(beforeNow));
+          mdr.setFXCMEndDate(new UTCDate(now));
+          mdr.setFXCMEndTime(new UTCTimeOnly(now));
+          // set the instrument on which the we want the historical data
+          mdr.addRelatedSymbol(tss.getSecurity(TEST_CURRENCY));
+          // send the request
+          sendRequest(mdr);
+        }
+        catch(Exception e) { e.printStackTrace(); }
       }
-      catch(Exception e) { e.printStackTrace(); }
     }
   }
  
@@ -327,10 +349,13 @@ public class JavaFixHistoryMiner
    */
   public void messageArrived(MarketDataRequestReject mdrr)
   {
-    // display note consisting of the reason the request was rejected
-    output.println("Historical data rejected; " + mdrr.getMDReqRejReason());
-    // set the state of the request to be complete
-    requestComplete = true;
+    synchronized ( requestSync ) {
+      // display note consisting of the reason the request was rejected
+      output.println("Historical data rejected; " + mdrr.getMDReqRejReason());
+      // set the state of the request to be complete
+      requestComplete = true;
+      requestSync.notify();
+    }
   }
 
   /**
@@ -343,21 +368,24 @@ public class JavaFixHistoryMiner
    */
   public void messageArrived(MarketDataSnapshot mds)
   {
-    // if the market data snapshot is part of the answer to a specific request
-    try
-    {
-      if(mds.getRequestID() != null && mds.getRequestID().equals(currentRequest))
+    synchronized ( requestSync ) {
+      // if the market data snapshot is part of the answer to a specific request
+      try
       {
-        // add that snapshot to the historicalRates table
-        synchronized(historicalRates) { historicalRates.put(mds.getDate(), mds); }
-        // set the request to be complete only if the continuous flaf is at the end
-        requestComplete = (mds.getFXCMContinuousFlag() == IFixDefs.FXCMCONTINUOUS_END);
+        if(mds.getRequestID() != null && mds.getRequestID().equals(currentRequest))
+        {
+          // add that snapshot to the historicalRates table
+          synchronized(historicalRates) { historicalRates.put(mds.getDate(), mds); }
+          // set the request to be complete only if the continuous flaf is at the end
+          requestComplete = (mds.getFXCMContinuousFlag() == IFixDefs.FXCMCONTINUOUS_END);
+          requestSync.notify();
+        }
       }
-    }
-    catch (Exception e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      catch (Exception e)
+      {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
     }
   }
 

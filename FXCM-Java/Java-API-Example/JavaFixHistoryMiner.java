@@ -26,6 +26,8 @@ import com.fxcm.fix.pretrade.MarketDataSnapshot;
 import com.fxcm.fix.pretrade.TradingSessionStatus;
 import com.fxcm.messaging.ISessionStatus;
 import com.fxcm.messaging.ITransportable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Example of how to request and process historical rate data from the Java API 
@@ -44,8 +46,8 @@ public class JavaFixHistoryMiner
   private String currentRequest;
   private boolean requestComplete;
 
-  private ArrayList<CollateralReport> accounts = new ArrayList<CollateralReport>();
-  private HashMap<UTCDate, MarketDataSnapshot> historicalRates = new HashMap<UTCDate, MarketDataSnapshot>();
+  private final ArrayList<CollateralReport> accounts = new ArrayList<CollateralReport>();
+  private final HashMap<UTCDate, MarketDataSnapshot> historicalRates = new HashMap<UTCDate, MarketDataSnapshot>();
  
   private static PrintWriter output = new PrintWriter((OutputStream)System.out, true);
   public PrintWriter getOutput() { return output; }
@@ -57,7 +59,6 @@ public class JavaFixHistoryMiner
    * @param username
    * @param password 
    * @param terminal - which terminal to login into, dependent on the type of account, case sensitive
-   * @param server - url, like 'http://www.fxcorporate.com/Hosts.jsp'
    * @param file - a local file used to define configuration
    */
   public JavaFixHistoryMiner(String username, String password, String terminal, String file)
@@ -76,7 +77,6 @@ public class JavaFixHistoryMiner
    * @param username
    * @param password
    * @param terminal - which terminal to login into, dependent on the type of account, case sensitive
-   * @param server - url, like 'http://www.fxcorporate.com/Hosts.jsp'
    */
   public JavaFixHistoryMiner(String username, String password, String terminal)
   {
@@ -92,6 +92,7 @@ public class JavaFixHistoryMiner
   
   /**
    * Attempt to login with credentials supplied in constructor, assigning self as listeners
+   * @return true if login successful, false if not
    */
   public boolean login()
   {
@@ -142,7 +143,9 @@ public class JavaFixHistoryMiner
       // return that this process was successful
       return true;
     }
-    catch(Exception e) { e.printStackTrace(); }
+    catch(Exception e) { 
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e); 
+    }
     // if any error occurred, then return that this process failed
     return false;
   }
@@ -190,13 +193,14 @@ public class JavaFixHistoryMiner
         }
       }
     } catch (InterruptedException ex) {
-      ex.printStackTrace();
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
 
   /**
    * Send a fully formed order to the API and wait for the response.
    *  
+   * @param request message to send to the Gateway
    *  @return the market order number of placed trade, NONE if the trade did not execute, null on error 
    */
   public String sendRequest(ITransportable request)
@@ -215,7 +219,9 @@ public class JavaFixHistoryMiner
       }
       return currentRequest;
     }
-    catch(Exception e) { e.printStackTrace(); }
+    catch(Exception e) { 
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e); 
+    }
     // if an error occured, return no result
     return null;
   }
@@ -333,7 +339,9 @@ public class JavaFixHistoryMiner
           // send the request
           sendRequest(mdr);
         }
-        catch(Exception e) { e.printStackTrace(); }
+        catch(Exception e) { 
+          Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e);
+        }
       }
     }
   }
@@ -364,7 +372,7 @@ public class JavaFixHistoryMiner
    */
   public void messageArrived(MarketDataSnapshot mds)
   {
-    synchronized ( requestSync ) {
+    synchronized ( requestSync ) { // currently we don't have a locking order issue with requestSync and historicalRates
       // if the market data snapshot is part of the answer to a specific request
       try
       {
@@ -380,7 +388,7 @@ public class JavaFixHistoryMiner
       catch (Exception e)
       {
         // TODO Auto-generated catch block
-        e.printStackTrace();
+        Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e);
       }
     }
   }
@@ -401,13 +409,13 @@ public class JavaFixHistoryMiner
     // make the date formatter above convert from GMT to EST
     sdf.setTimeZone(TimeZone.getTimeZone("EST"));
     // go through the keys of the historicalRates table
-    for(int i = 0; i < candle.size(); i++)
+    for(UTCDate date : candle)
     {
       // create a single instance of the snapshot
       MarketDataSnapshot candleData;
-      synchronized(historicalRates) { candleData = historicalRates.get(candle.toArray()[i]); }
+      synchronized(historicalRates) { candleData = historicalRates.get(date); }
       // convert the key to a Date
-      Date candleDate = ((UTCDate)candle.toArray()[i]).toDate();
+      Date candleDate = date.toDate();
       // print out the historicalRate table data
       output.println(
         sdf.format(candleDate) + "\t" +    // the date and time formatted and converted to EST
@@ -444,6 +452,8 @@ public class JavaFixHistoryMiner
       // log out of the api
       miner.logout();
     }
-    catch (Exception e) { e.printStackTrace(); }
+    catch (Exception e) { 
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e);
+    }    
   }
 }

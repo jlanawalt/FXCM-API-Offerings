@@ -45,6 +45,7 @@ public class JavaFixHistoryMiner
   private final Object requestSync = new Object();
   private String currentRequest;
   private boolean requestComplete;
+  private TradingSessionStatus tss = null;
 
   private final ArrayList<CollateralReport> accounts = new ArrayList<>();
   private final HashMap<UTCDate, MarketDataSnapshot> historicalRates = new HashMap<>();
@@ -129,16 +130,6 @@ public class JavaFixHistoryMiner
       {
         // attempt to re-login to the api
         gateway.relogin();
-      }
-      synchronized ( requestSync ) {
-        // set the state of the request to be incomplete
-        requestComplete = false;
-        // request the current trading session status
-        currentRequest = gateway.requestTradingSessionStatus();
-        // wait until the request is complete
-        while(!requestComplete) {
-          requestSync.wait();
-        }
       }
       // return that this process was successful
       return true;
@@ -308,40 +299,9 @@ public class JavaFixHistoryMiner
       if(currentRequest.equals(tss.getRequestID()))
       {
         // set that the request is complete for any waiting thread
+        this.tss = tss;
         requestComplete = true;
         requestSync.notify();
-        // attempt to set up the historical market data request
-        try
-        {
-          // create a new market data request
-          MarketDataRequest mdr = new MarketDataRequest();
-          // set the subscription type to ask for only a snapshot of the history
-          mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
-          // request the response to be formated FXCM style
-          mdr.setResponseFormat(IFixDefs.MSGTYPE_FXCMRESPONSE);
-          // set the intervale of the data candles
-          mdr.setFXCMTimingInterval(FXCMTimingIntervalFactory.MIN15);
-          // set the type set for the data candles
-          mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
-          // configure the start and end dates
-          Date now = new Date();
-          Calendar calendar = (Calendar)Calendar.getInstance().clone();
-          calendar.setTime(now);
-          calendar.add(Calendar.DAY_OF_MONTH, -1);
-          Date beforeNow = calendar.getTime();
-          // set the dates and times for the market data request
-          mdr.setFXCMStartDate(new UTCDate(beforeNow));
-          mdr.setFXCMStartTime(new UTCTimeOnly(beforeNow));
-          mdr.setFXCMEndDate(new UTCDate(now));
-          mdr.setFXCMEndTime(new UTCTimeOnly(now));
-          // set the instrument on which the we want the historical data
-          mdr.addRelatedSymbol(tss.getSecurity(TEST_CURRENCY));
-          // send the request
-          sendRequest(mdr);
-        }
-        catch(Exception e) { 
-          Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e);
-        }
       }
     }
   }
@@ -427,6 +387,69 @@ public class JavaFixHistoryMiner
     // repeat the table column headings
     output.println("Date\t   Time\t\tOBid\tCBid\tHBid\tLBid");
   }
+  
+  private void requestTradingSessionStatus() {
+    try {
+      synchronized ( requestSync ) {
+        // set the state of the request to be incomplete
+        requestComplete = false;
+        // request the current trading session status
+        currentRequest = gateway.requestTradingSessionStatus();
+        // wait until the request is complete
+        while(!requestComplete) {
+          requestSync.wait();
+        }
+      }
+    }
+    catch(Exception e) { 
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e); 
+    }
+  }
+  
+  private String requestHistory() {
+    String requestid = null;
+    // attempt to set up the historical market data request
+    try
+    {
+      // create a new market data request
+      MarketDataRequest mdr = new MarketDataRequest();
+      // set the subscription type to ask for only a snapshot of the history
+      mdr.setSubscriptionRequestType(SubscriptionRequestTypeFactory.SNAPSHOT);
+      // request the response to be formated FXCM style
+      mdr.setResponseFormat(IFixDefs.MSGTYPE_FXCMRESPONSE);
+      // set the intervale of the data candles
+      mdr.setFXCMTimingInterval(FXCMTimingIntervalFactory.MIN15);
+      // set the type set for the data candles
+      mdr.setMDEntryTypeSet(MarketDataRequest.MDENTRYTYPESET_ALL);
+      // configure the start and end dates
+      Date now = new Date();
+      Calendar calendar = (Calendar)Calendar.getInstance().clone();
+      calendar.setTime(now);
+      calendar.add(Calendar.DAY_OF_MONTH, -1);
+      Date beforeNow = calendar.getTime();
+      // set the dates and times for the market data request
+      mdr.setFXCMStartDate(new UTCDate(beforeNow));
+      mdr.setFXCMStartTime(new UTCTimeOnly(beforeNow));
+      mdr.setFXCMEndDate(new UTCDate(now));
+      mdr.setFXCMEndTime(new UTCTimeOnly(now));
+      // set the instrument on which the we want the historical data
+      mdr.addRelatedSymbol(tss.getSecurity(TEST_CURRENCY));
+      // send the request
+      requestid = sendRequest(mdr);
+      
+      synchronized ( requestSync ) {
+        output.println("Waiting for history");
+        while(!requestComplete) {
+          requestSync.wait();
+          output.println("...");
+        }
+      }
+    }
+    catch(Exception e) { 
+      Logger.getLogger(JavaFixHistoryMiner.class.getName()).log(Level.SEVERE, null, e);
+    }
+    return requestid;
+  }
 
   public static void main(String[] args)
   {
@@ -436,17 +459,15 @@ public class JavaFixHistoryMiner
       JavaFixHistoryMiner miner = new JavaFixHistoryMiner("rkichenama", "1311016", "Demo");
       // login to the api
       miner.login();
+      // request and subscribe to the trading session status
+      miner.requestTradingSessionStatus();
       // retrieve the trader accounts to ensure login process is complete
       miner.retrieveAccounts();
       // display nore that the history display is delayed
       // partially for theatrics, partially to ensure all the rates are collected
-      output.println("Displaying history in");
-      // wait ~ 2.5 seconds
-      for(int i = 5; i > 0; i--)
-      {
-        output.println(i + "...");
-        Thread.sleep(500);
-      }
+      
+      miner.requestHistory();
+      
       // display the collected rates
       miner.displayHistory();
       // log out of the api

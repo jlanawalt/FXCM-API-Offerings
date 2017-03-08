@@ -46,8 +46,8 @@ public class JavaFixHistoryMiner
   private String currentRequest;
   private boolean requestComplete;
 
-  private final ArrayList<CollateralReport> accounts = new ArrayList<CollateralReport>();
-  private final HashMap<UTCDate, MarketDataSnapshot> historicalRates = new HashMap<UTCDate, MarketDataSnapshot>();
+  private final ArrayList<CollateralReport> accounts = new ArrayList<>();
+  private final HashMap<UTCDate, MarketDataSnapshot> historicalRates = new HashMap<>();
  
   private static PrintWriter output = new PrintWriter((OutputStream)System.out, true);
   public PrintWriter getOutput() { return output; }
@@ -403,7 +403,7 @@ public class JavaFixHistoryMiner
     // give the table column headings
     output.println("Date\t   Time\t\tOBid\tCBid\tHBid\tLBid");
     // get the keys for the historicalRates table into a sorted list
-    SortedSet<UTCDate> candle = new TreeSet<UTCDate>(historicalRates.keySet());
+    SortedSet<UTCDate> candle = new TreeSet<>(historicalRates.keySet());
     // define a format for the dates
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss z");
     // make the date formatter above convert from GMT to EST
